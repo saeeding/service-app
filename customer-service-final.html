@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفترچه مشتریان سرویس</title>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.9.2/build/moment-jalaali.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --bg:#f4ede4;--panel:#fff;--ink:#2e2a26;--muted:#8a8078;
+  --accent:#c0633a;--accent-dark:#9c4a28;--ok:#5c7a52;
+  --line:#e6dcd0;--due-bg:#fbeae2;--due-border:#e3a98a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Tahoma',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding:16px}
+.wrap{max-width:480px;margin:0 auto}
+header{text-align:center;margin-bottom:14px;padding-top:6px}
+header .tag{font-size:11px;letter-spacing:2px;color:var(--accent);font-weight:700}
+header h1{margin:4px 0 0;font-size:22px;font-weight:800}
+.tabs{display:flex;gap:6px;margin-bottom:12px;background:var(--panel);border-radius:14px;padding:5px;border:1px solid var(--line)}
+.tab{flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;font-family:inherit;transition:.15s}
+.tab.active{background:var(--accent);color:#fff}
+.view{display:none}.view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.card.due{background:var(--due-bg);border-color:var(--due-border)}
+.cust-name{font-size:16px;font-weight:800;margin:0 0 4px}
+.cust-meta{font-size:13px;color:var(--muted);line-height:1.7}
+.cust-meta a{color:inherit;text-decoration:none}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:6px}
+.badge.due{background:var(--accent);color:#fff}
+.badge.ok{background:#eef1ea;color:var(--ok)}
+.badge.none{background:#f0eae2;color:var(--muted)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:10px 0 4px}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fdfaf6;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{resize:vertical;min-height:55px}
+button.primary{width:100%;margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+button.primary:active{background:var(--accent-dark)}
+.small-btn{border:none;background:var(--line);color:var(--ink);border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.small-btn.danger{background:#f4d9d0;color:var(--accent-dark)}
+.small-btn.gdrive{background:#e8f0fe;color:#1a73e8}
+.history-item{border-top:1px dashed var(--line);padding:10px 0;font-size:13px}
+.history-item .h-date{font-weight:700;color:var(--accent-dark);font-size:12px;margin-bottom:4px}
+.h-tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.h-tag{display:inline-block;background:var(--due-bg);color:var(--accent-dark);border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700}
+.h-tag.install{background:#e8f5e9;color:#2e7d32}
+.h-tag.repair{background:#fff3e0;color:#e65100}
+.history-item .h-next{color:var(--muted);font-size:12px;margin-top:4px}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:28px 10px}
+.empty .big{font-size:34px;display:block;margin-bottom:8px}
+.back-link{display:inline-block;margin-bottom:10px;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer}
+.section-title{font-size:12px;font-weight:800;color:var(--muted);margin:16px 0 7px;letter-spacing:1px}
+.search-box{margin-bottom:10px}
+
+/* چک‌باکس و رادیو استایل */
+.check-group{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.check-option{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;background:#fdfaf6;transition:.15s;user-select:none}
+.check-option:hover{border-color:var(--accent)}
+.check-option.selected{border-color:var(--accent);background:#fdf2ec}
+.check-option input{accent-color:var(--accent);width:17px;height:17px;flex-shrink:0}
+.check-label{font-size:14px;font-weight:600}
+
+/* بخش نصب */
+.install-section{border:1.5px solid #c8e6c9;border-radius:12px;padding:12px;margin-bottom:10px;background:#f9fdf9}
+.install-section .sec-title{font-size:12px;font-weight:800;color:#2e7d32;margin-bottom:8px}
+.install-badge{display:inline-block;background:#e8f5e9;color:#2e7d32;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;margin-top:6px}
+
+footer{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;padding-bottom:10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+.backup-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.backup-row .small-btn{flex:1;padding:9px 4px;text-align:center;font-size:11px}
+.divider{border:none;border-top:1px dashed var(--line);margin:10px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">دفترچه سرویس</div>
+    <h1>مشتریان من</h1>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="list">مشتریان</button>
+    <button class="tab" data-tab="reminders">یادآوری‌ها</button>
+    <button class="tab" data-tab="add">مشتری جدید</button>
+  </div>
+
+  <div class="backup-row">
+    <button class="small-btn" id="exportBtn">⬇️ پشتیبان</button>
+    <button class="small-btn gdrive" id="gdriveBtn">☁️ گوگل درایو</button>
+    <button class="small-btn" id="importBtn">⬆️ بازگردانی</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json" style="display:none">
+
+  <div class="view active" id="view-list">
+    <div class="search-box"><input type="text" id="searchInput" placeholder="جستجو بر اساس نام یا شماره..."></div>
+    <div id="customerList"></div>
+  </div>
+
+  <div class="view" id="view-reminders">
+    <div id="reminderList"></div>
+  </div>
+
+  <div class="view" id="view-add">
+    <div class="card">
+      <label>نام مشتری *</label>
+      <input type="text" id="newName" placeholder="مثلاً: آقای رضایی">
+      <label>شماره تلفن</label>
+      <input type="tel" id="newPhone" placeholder="09xxxxxxxxx">
+      <label>آدرس</label>
+      <textarea id="newAddress" placeholder="آدرس کامل محل نصب دستگاه"></textarea>
+      <button class="primary" id="saveCustomerBtn">ذخیره مشتری</button>
+    </div>
+  </div>
+
+  <div class="view" id="view-detail">
+    <span class="back-link" id="backToList">← بازگشت به لیست</span>
+    <div class="card">
+      <div class="cust-name" id="detailName"></div>
+      <div class="cust-meta" id="detailMeta"></div>
+      <div id="installBadgeArea"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="small-btn danger" id="deleteCustBtn">حذف مشتری</button>
+      </div>
+    </div>
+
+    <div class="section-title">ثبت سرویس جدید</div>
+    <div class="card">
+
+      <!-- تاریخ -->
+      <label>تاریخ سرویس (شمسی) *</label>
+      <div class="row">
+        <input type="number" id="svcYear" placeholder="سال" min="1380" max="1450" style="flex:2">
+        <select id="svcMonth" style="flex:2">
+          <option value="1">فروردین</option><option value="2">اردیبهشت</option>
+          <option value="3">خرداد</option><option value="4">تیر</option>
+          <option value="5">مرداد</option><option value="6">شهریور</option>
+          <option value="7">مهر</option><option value="8">آبان</option>
+          <option value="9">آذر</option><option value="10">دی</option>
+          <option value="11">بهمن</option><option value="12">اسفند</option>
+        </select>
+        <input type="number" id="svcDay" placeholder="روز" min="1" max="31" style="flex:1">
+      </div>
+
+      <hr class="divider">
+
+      <!-- نصب دستگاه -->
+      <div class="install-section">
+        <div class="sec-title">🔧 نصب دستگاه</div>
+        <label class="check-option" id="installOpt">
+          <input type="checkbox" id="chkInstall">
+          <span class="check-label">ثبت تاریخ نصب دستگاه</span>
+        </label>
+      </div>
+
+      <!-- فیلترها -->
+      <label>💧 فیلترهای تعویض‌شده (چند تا انتخاب کن)</label>
+      <div class="check-group">
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر اول (پیش‌فیلتر)"><span class="check-label">فیلتر اول (پیش‌فیلتر)</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر دوم (کربن اکتیو)"><span class="check-label">فیلتر دوم (کربن اکتیو)</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر سوم (کربن بلوک)"><span class="check-label">فیلتر سوم (کربن بلوک)</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر پست کربن"><span class="check-label">فیلتر پست کربن</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر مینرال"><span class="check-label">فیلتر مینرال</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="ممبران"><span class="check-label">ممبران</span></label>
+      </div>
+
+      <!-- تعمیرات -->
+      <label style="margin-top:12px">🛠️ تعمیرات (اختیاری)</label>
+      <textarea id="repairDesc" placeholder="مثلاً: تعویض شیر برقی، رفع نشتی، تعمیر پمپ..."></textarea>
+
+      <!-- یادآوری -->
+      <hr class="divider">
+      <label>⏰ یادآوری سرویس بعدی</label>
+      <select id="reminderDays">
+        <option value="0">بدون یادآوری</option>
+        <option value="30">۱ ماه</option>
+        <option value="90">۳ ماه</option>
+        <option value="180">۶ ماه</option>
+        <option value="365" selected>۱ سال</option>
+        <option value="custom">دلخواه...</option>
+      </select>
+      <input type="number" id="customDays" placeholder="تعداد روز" style="display:none;margin-top:8px">
+      <button class="primary" id="saveServiceBtn">ثبت سرویس</button>
+    </div>
+
+    <div class="section-title">تاریخچه سرویس‌ها</div>
+    <div id="historyList"></div>
+  </div>
+
+  <footer>اطلاعات روی همین گوشی ذخیره می‌شود</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let customers=[], currentId=null;
+
+function uid(){ return 'c_'+Date.now()+'_'+Math.floor(Math.random()*10000); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+function toJalali(iso){
+  if(!iso) return '-';
+  try{ return moment(iso,'YYYY-MM-DD').format('jYYYY/jMM/jDD'); }catch(e){ return iso; }
+}
+function jalaliToISO(y,m,d){
+  try{ return moment(`${y}/${m}/${d}`,'jYYYY/jM/jD').format('YYYY-MM-DD'); }catch(e){ return null; }
+}
+function todayJalali(){
+  const j=moment(); return {y:j.jYear(),m:j.jMonth()+1,d:j.jDate()};
+}
+function setTodayInForm(){
+  const t=todayJalali();
+  document.getElementById('svcYear').value=t.y;
+  document.getElementById('svcMonth').value=t.m;
+  document.getElementById('svcDay').value=t.d;
+}
+
+function loadAll(){
+  try{ const r=localStorage.getItem('svc_customers'); customers=r?JSON.parse(r):[]; }
+  catch(e){ customers=[]; }
+  renderList(); renderReminders();
+}
+function saveAll(){
+  try{ localStorage.setItem('svc_customers',JSON.stringify(customers)); }
+  catch(e){ showToast('خطا در ذخیره‌سازی'); }
+}
+
+function getNextReminder(c){
+  let s=null;
+  (c.history||[]).forEach(h=>{ if(h.nextDue&&(!s||new Date(h.nextDue)<new Date(s))) s=h.nextDue; });
+  return s;
+}
+function daysUntil(d){ const t=new Date(); t.setHours(0,0,0,0); const x=new Date(d); x.setHours(0,0,0,0); return Math.round((x-t)/86400000); }
+function esc(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function renderList(){
+  const el=document.getElementById('customerList');
+  const q=(document.getElementById('searchInput').value||'').trim().toLowerCase();
+  let list=customers.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','fa'));
+  if(q) list=list.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.phone||'').toLowerCase().includes(q));
+  if(!list.length){ el.innerHTML='<div class="empty"><span class="big">📋</span>هنوز مشتری‌ای ثبت نشده.</div>'; return; }
+  el.innerHTML=list.map(c=>{
+    const next=getNextReminder(c);
+    let badge='<span class="badge none">بدون یادآوری</span>', cc='card';
+    if(next){
+      const d=daysUntil(next);
+      if(d<=0){badge='<span class="badge due">سرویس امروز/گذشته!</span>';cc+=' due';}
+      else if(d<=7){badge=`<span class="badge due">${d} روز دیگر</span>`;cc+=' due';}
+      else{badge=`<span class="badge ok">سرویس بعدی: ${toJalali(next)}</span>`;}
+    }
+    const installDate=c.installDate?`<div style="font-size:11px;color:var(--ok);margin-top:2px">🔧 نصب: ${c.installDate}</div>`:'';
+    return `<div class="${cc}" onclick="openDetail('${c.id}')">
+      <div class="cust-name">${esc(c.name)}</div>
+      <div class="cust-meta">${c.phone?'📞 '+esc(c.phone):''}</div>
+      ${installDate}<div>${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderReminders(){
+  const el=document.getElementById('reminderList');
+  let items=[];
+  customers.forEach(c=>{ const n=getNextReminder(c); if(n) items.push({cust:c,date:n,days:daysUntil(n)}); });
+  items.sort((a,b)=>a.days-b.days);
+  if(!items.length){ el.innerHTML='<div class="empty"><span class="big">🔔</span>هیچ یادآوری فعالی نداری.</div>'; return; }
+  el.innerHTML=items.map(it=>{
+    let cc='card', badge;
+    if(it.days<=0){badge=`<span class="badge due">امروز یا گذشته (${toJalali(it.date)})</span>`;cc+=' due';}
+    else if(it.days<=14){badge=`<span class="badge due">${it.days} روز دیگر — ${toJalali(it.date)}</span>`;cc+=' due';}
+    else{badge=`<span class="badge ok">${it.days} روز دیگر — ${toJalali(it.date)}</span>`;}
+    return `<div class="${cc}" onclick="openDetail('${it.cust.id}')">
+      <div class="cust-name">${esc(it.cust.name)}</div>
+      <div class="cust-meta">${it.cust.phone?'📞 '+esc(it.cust.phone):''}</div>
+      <div>${badge}</div>
+    </div>`;
+  }).join('');
+}
+
+function openDetail(id){
+  currentId=id;
+  const c=customers.find(x=>x.id===id); if(!c) return;
+  document.getElementById('detailName').textContent=c.name;
+  let meta='';
+  if(c.phone) meta+=`📞 <a href="tel:${c.phone}">${esc(c.phone)}</a><br>`;
+  if(c.address) meta+=`📍 ${esc(c.address)}`;
+  document.getElementById('detailMeta').innerHTML=meta||'بدون اطلاعات تماس';
+  // نمایش تاریخ نصب
+  const iba=document.getElementById('installBadgeArea');
+  iba.innerHTML=c.installDate?`<div class="install-badge">🔧 تاریخ نصب: ${c.installDate}</div>`:'';
+  // ریست فرم
+  document.getElementById('chkInstall').checked=false;
+  document.getElementById('installOpt').classList.remove('selected');
+  document.querySelectorAll('input[name=filter]').forEach(x=>{x.checked=false; x.closest('.check-option').classList.remove('selected');});
+  document.getElementById('repairDesc').value='';
+  document.getElementById('reminderDays').value='365';
+  document.getElementById('customDays').style.display='none';
+  setTodayInForm();
+  renderHistory(c);
+  switchView('detail');
+}
+
+function renderHistory(c){
+  const el=document.getElementById('historyList');
+  const hist=(c.history||[]).slice().sort((a,b)=>new Date(b.isoDate)-new Date(a.isoDate));
+  if(!hist.length){ el.innerHTML='<div class="empty">هنوز سرویسی ثبت نشده.</div>'; return; }
+  el.innerHTML=hist.map(h=>{
+    let tags='';
+    if(h.isInstall) tags+=`<span class="h-tag install">🔧 نصب دستگاه</span>`;
+    (h.filters||[]).forEach(f=>{ tags+=`<span class="h-tag">💧 ${esc(f)}</span>`; });
+    if(h.repair) tags+=`<span class="h-tag repair">🛠️ ${esc(h.repair)}</span>`;
+    return `<div class="card history-item">
+      <div class="h-date">📅 ${esc(h.jalaliDate)}</div>
+      <div class="h-tags">${tags||'<span class="h-tag">ثبت سرویس</span>'}</div>
+      ${h.nextDue?`<div class="h-next">⏰ یادآوری بعدی: ${toJalali(h.nextDue)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const tabMap={'list':'list','reminders':'reminders','add':'add'};
+  if(tabMap[name]) document.querySelector(`[data-tab="${tabMap[name]}"]`).classList.add('active');
+}
+
+// رویدادها
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    switchView(tab.dataset.tab);
+    if(tab.dataset.tab==='reminders') renderReminders();
+    if(tab.dataset.tab==='list') renderList();
+  });
+});
+
+document.getElementById('backToList').addEventListener('click',()=>{ switchView('list'); renderList(); });
+document.getElementById('searchInput').addEventListener('input',renderList);
+document.getElementById('reminderDays').addEventListener('change',e=>{
+  document.getElementById('customDays').style.display=e.target.value==='custom'?'block':'none';
+});
+
+// چک‌باکس استایل
+document.getElementById('chkInstall').addEventListener('change',function(){
+  document.getElementById('installOpt').classList.toggle('selected',this.checked);
+});
+document.querySelectorAll('input[name=filter]').forEach(cb=>{
+  cb.addEventListener('change',function(){
+    this.closest('.check-option').classList.toggle('selected',this.checked);
+  });
+});
+
+document.getElementById('saveCustomerBtn').addEventListener('click',()=>{
+  const name=document.getElementById('newName').value.trim();
+  if(!name){ showToast('نام مشتری را وارد کن'); return; }
+  customers.push({id:uid(),name,phone:document.getElementById('newPhone').value.trim(),address:document.getElementById('newAddress').value.trim(),history:[]});
+  saveAll();
+  document.getElementById('newName').value='';
+  document.getElementById('newPhone').value='';
+  document.getElementById('newAddress').value='';
+  showToast('مشتری ذخیره شد ✅');
+  switchView('list'); renderList();
+});
+
+document.getElementById('deleteCustBtn').addEventListener('click',()=>{
+  if(!confirm('این مشتری و کل تاریخچه‌اش حذف شود؟')) return;
+  customers=customers.filter(c=>c.id!==currentId);
+  saveAll(); showToast('مشتری حذف شد');
+  switchView('list'); renderList();
+});
+
+document.getElementById('saveServiceBtn').addEventListener('click',()=>{
+  const c=customers.find(x=>x.id===currentId); if(!c) return;
+  const y=document.getElementById('svcYear').value;
+  const m=document.getElementById('svcMonth').value;
+  const d=document.getElementById('svcDay').value;
+  if(!y||!d){ showToast('تاریخ را کامل وارد کن'); return; }
+  const isoDate=jalaliToISO(y,m,d);
+  if(!isoDate){ showToast('تاریخ وارد شده نامعتبر است'); return; }
+  const jalaliDate=`${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+
+  const isInstall=document.getElementById('chkInstall').checked;
+  const filters=Array.from(document.querySelectorAll('input[name=filter]:checked')).map(x=>x.value);
+  const repair=document.getElementById('repairDesc').value.trim();
+
+  if(!isInstall&&!filters.length&&!repair){ showToast('حداقل یک مورد انتخاب یا وارد کن'); return; }
+
+  // ذخیره تاریخ نصب روی مشتری
+  if(isInstall) c.installDate=jalaliDate;
+
+  let days=document.getElementById('reminderDays').value;
+  if(days==='custom') days=parseInt(document.getElementById('customDays').value)||0;
+  else days=parseInt(days);
+  let nextDue=null;
+  if(days>0){ const nd=new Date(isoDate); nd.setDate(nd.getDate()+days); nextDue=nd.toISOString().slice(0,10); }
+
+  c.history=c.history||[];
+  c.history.push({isoDate,jalaliDate,isInstall,filters,repair,nextDue});
+  saveAll();
+
+  // ریست
+  document.getElementById('chkInstall').checked=false;
+  document.getElementById('installOpt').classList.remove('selected');
+  document.querySelectorAll('input[name=filter]').forEach(x=>{x.checked=false;x.closest('.check-option').classList.remove('selected');});
+  document.getElementById('repairDesc').value='';
+  showToast('سرویس ثبت شد ✅');
+  renderHistory(c); renderReminders();
+  // بروزرسانی بج نصب
+  const iba=document.getElementById('installBadgeArea');
+  iba.innerHTML=c.installDate?`<div class="install-badge">🔧 تاریخ نصب: ${c.installDate}</div>`:'';
+});
+
+// پشتیبان
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(customers,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const j=todayJalali();
+  a.href=url; a.download=`backup-${j.y}-${j.m}-${j.d}.json`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('فایل پشتیبان دانلود شد ✅');
+});
+document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data)) throw new Error();
+      if(customers.length>0&&!confirm('اطلاعات فعلی با فایل پشتیبان جایگزین شود؟')) return;
+      customers=data; saveAll(); renderList(); renderReminders();
+      showToast('بازگردانی انجام شد ✅');
+    }catch(err){ showToast('فایل نامعتبر است'); }
+    e.target.value='';
+  };
+  r.readAsText(file);
+});
+
+// گوگل درایو
+const GDRIVE_CLIENT_ID='540284402443-2fn10ack4ska1irf2q40e3e3uqtq7c3r.apps.googleusercontent.com';
+let gdriveToken=null;
+
+document.getElementById('gdriveBtn').addEventListener('click',async()=>{
+  if(GDRIVE_CLIENT_ID==='YOUR_GOOGLE_CLIENT_ID'){
+    showToast('ابتدا Client ID گوگل را تنظیم کن');
+    return;
+  }
+  try{
+    if(!gdriveToken) await gdriveSignIn();
+    await uploadToDrive();
+  }catch(e){ showToast('خطا در اتصال به گوگل درایو'); }
+});
+
+function gdriveSignIn(){
+  return new Promise((resolve,reject)=>{
+    const client=window.google.accounts.oauth2.initTokenClient({
+      client_id:GDRIVE_CLIENT_ID,
+      scope:'https://www.googleapis.com/auth/drive.file',
+      callback:resp=>{ if(resp.error){reject(resp);return;} gdriveToken=resp.access_token; resolve(); }
+    });
+    client.requestAccessToken();
+  });
+}
+async function uploadToDrive(){
+  const j=todayJalali();
+  const fileName=`backup-moshtarian-${j.y}-${j.m}-${j.d}.json`;
+  const content=JSON.stringify(customers,null,2);
+  const form=new FormData();
+  form.append('metadata',new Blob([JSON.stringify({name:fileName,mimeType:'application/json'})],{type:'application/json'}));
+  form.append('file',new Blob([content],{type:'application/json'}));
+  const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{
+    method:'POST',headers:{Authorization:`Bearer ${gdriveToken}`},body:form
+  });
+  if(res.ok) showToast('در گوگل درایو ذخیره شد ✅');
+  else{ gdriveToken=null; showToast('خطا در آپلود — دوباره امتحان کن'); }
+}
+
+window.openDetail=openDetail;
+loadAll();
+</script>
+</body>
+</html>
