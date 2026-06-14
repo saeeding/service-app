@@ -1,0 +1,21 @@
+{
+  "name": "سرویس سفیر - مدیریت مشتریان اسدی",
+  "short_name": "سرویس سفیر",
+  "description": "اپ اختصاصی تصفیه آب سفیر برای مدیریت مشتریان و سرویس‌ها",
+  "start_url": "/service-app/safir-water-pro.html",
+  "scope": "/service-app/",
+  "display": "standalone",
+  "background_color": "#f4ede4",
+  "theme_color": "#c0633a",
+  "orientation": "portrait",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "safir-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
