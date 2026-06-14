@@ -116,6 +116,7 @@ footer{text-align:center;color:var(--muted);font-size:10px;margin-top:16px;paddi
   <div class="tabs">
     <button class="tab active" data-tab="list">مشتریان</button>
     <button class="tab" data-tab="reminders">یادآوری</button>
+    <button class="tab" data-tab="search">🔍 جستجو</button>
     <button class="tab" data-tab="report">گزارش</button>
     <button class="tab" data-tab="add">+ مشتری</button>
   </div>
@@ -131,6 +132,14 @@ footer{text-align:center;color:var(--muted);font-size:10px;margin-top:16px;paddi
   <div class="view active" id="view-list">
     <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 جستجو نام یا شماره..."></div>
     <div id="customerList"></div>
+  </div>
+
+  <!-- جستجو در تاریخچه -->
+  <div class="view" id="view-search">
+    <div class="search-box">
+      <input type="text" id="historySearchInput" placeholder="🔍 جستجو در همه سرویس‌ها...">
+    </div>
+    <div id="historySearchResults"></div>
   </div>
 
   <!-- یادآوری‌ها -->
@@ -160,6 +169,9 @@ footer{text-align:center;color:var(--muted);font-size:10px;margin-top:16px;paddi
       <input type="text" id="newModel" placeholder="مثلاً: آکوا پیور A5">
       <label>شماره سریال</label>
       <input type="text" id="newSerial" placeholder="شماره سریال دستگاه">
+      <label>📷 تصویر دستگاه (اختیاری)</label>
+      <div id="newImagePreview" style="margin-bottom:6px"></div>
+      <input type="file" id="newDeviceImage" accept="image/*" capture="environment">
       <button class="primary" id="saveCustomerBtn">ذخیره مشتری</button>
     </div>
   </div>
@@ -171,6 +183,7 @@ footer{text-align:center;color:var(--muted);font-size:10px;margin-top:16px;paddi
       <div class="cust-name" id="detailName"></div>
       <div class="cust-meta" id="detailMeta"></div>
       <div id="deviceInfo" style="margin-top:6px;font-size:12px;color:var(--muted)"></div>
+      <div id="deviceImageArea" style="margin-top:8px"></div>
       <div id="installBadgeArea"></div>
       <div class="action-icons" id="detailActions"></div>
     </div>
@@ -429,7 +442,13 @@ function openDetail(id){
   if(c.serial) dev+=`| سریال: ${esc(c.serial)}`;
   document.getElementById('deviceInfo').innerHTML=dev;
   document.getElementById('installBadgeArea').innerHTML=c.installDate?`<div class="install-badge">🔧 نصب: ${c.installDate}</div>`:'';
-  // دکمه‌های اکشن
+  // تصویر دستگاه
+  const dia=document.getElementById('deviceImageArea');
+  if(c.deviceImage){
+    dia.innerHTML=`<img src="${c.deviceImage}" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-top:6px;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'200px':'none'"><br><label style="cursor:pointer"><span class="small-btn" style="margin-top:4px">🔄 تغییر تصویر</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="addDeviceImage('${c.id}',this)"></label>`;
+  } else {
+    dia.innerHTML=`<label style="display:inline-block;margin-top:6px;cursor:pointer"><span class="small-btn">📷 افزودن تصویر دستگاه</span><input type="file" accept="image/*" capture="environment" style="display:none" onchange="addDeviceImage('${c.id}',this)"></label>`;
+  }
   let acts='';
   if(c.phone) acts+=`<button class="small-btn green" onclick="sendWhatsapp('${c.phone}','${esc(c.name)}',event)">💬 واتساپ</button>`;
   if(c.phone) acts+=`<button class="small-btn blue" onclick="sendSMS('${c.phone}','${esc(c.name)}',event)">📱 SMS</button>`;
@@ -574,13 +593,13 @@ function switchView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const map={list:'list',reminders:'reminders',report:'report',add:'add'};
+  const map={list:'list',reminders:'reminders',report:'report',add:'add',search:'search'};
   if(map[name]){ const tb=document.querySelector(`[data-tab="${map[name]}"]`); if(tb) tb.classList.add('active'); }
 }
 
 // رویدادها
 document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{ switchView(tab.dataset.tab); if(tab.dataset.tab==='reminders') renderReminders(); if(tab.dataset.tab==='list') renderList(); if(tab.dataset.tab==='report') renderReport(); });
+  tab.addEventListener('click',()=>{ switchView(tab.dataset.tab); if(tab.dataset.tab==='reminders') renderReminders(); if(tab.dataset.tab==='list') renderList(); if(tab.dataset.tab==='report') renderReport(); if(tab.dataset.tab==='search'){ document.getElementById('historySearchResults').innerHTML='<div class="empty">چیزی بنویس تا جستجو کنه...</div>'; } });
 });
 document.getElementById('backToList').addEventListener('click',()=>{ switchView('list'); renderList(); });
 document.getElementById('backFromInvoice').addEventListener('click',()=>{ switchView('detail'); });
@@ -598,10 +617,20 @@ document.getElementById('addPartBtn').addEventListener('click',()=>{
 document.getElementById('saveCustomerBtn').addEventListener('click',()=>{
   const name=document.getElementById('newName').value.trim();
   if(!name){ showToast('نام مشتری را وارد کن'); return; }
-  customers.push({id:uid(),name,phone:document.getElementById('newPhone').value.trim(),address:document.getElementById('newAddress').value.trim(),model:document.getElementById('newModel').value.trim(),serial:document.getElementById('newSerial').value.trim(),history:[]});
-  saveAll();
-  ['newName','newPhone','newAddress','newModel','newSerial'].forEach(id=>document.getElementById(id).value='');
-  showToast('مشتری ذخیره شد ✅'); switchView('list'); renderList();
+  const imgFile=document.getElementById('newDeviceImage').files[0];
+  const saveCustomer=(imgData)=>{
+    customers.push({id:uid(),name,phone:document.getElementById('newPhone').value.trim(),address:document.getElementById('newAddress').value.trim(),model:document.getElementById('newModel').value.trim(),serial:document.getElementById('newSerial').value.trim(),deviceImage:imgData||null,history:[]});
+    saveAll();
+    ['newName','newPhone','newAddress','newModel','newSerial'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('newImagePreview').innerHTML='';
+    document.getElementById('newDeviceImage').value='';
+    showToast('مشتری ذخیره شد ✅'); switchView('list'); renderList();
+  };
+  if(imgFile){
+    const reader=new FileReader();
+    reader.onload=e=>saveCustomer(e.target.result);
+    reader.readAsDataURL(imgFile);
+  } else { saveCustomer(null); }
 });
 
 document.getElementById('saveServiceBtn').addEventListener('click',()=>{
@@ -671,6 +700,59 @@ async function uploadToDrive(){
   if(res.ok) showToast('در گوگل درایو ذخیره شد ✅');
   else{ gdriveToken=null; showToast('خطا در آپلود'); }
 }
+
+window.addDeviceImage=function(custId, input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const c=customers.find(x=>x.id===custId); if(!c) return;
+    c.deviceImage=e.target.result;
+    saveAll(); openDetail(custId);
+    showToast('تصویر ذخیره شد ✅');
+  };
+  reader.readAsDataURL(file);
+};
+
+// جستجو در تاریخچه
+document.getElementById('historySearchInput').addEventListener('input', function(){
+  const q=this.value.trim().toLowerCase();
+  const el=document.getElementById('historySearchResults');
+  if(!q){ el.innerHTML='<div class="empty">چیزی بنویس تا جستجو کنه...</div>'; return; }
+  let results=[];
+  customers.forEach(c=>{
+    (c.history||[]).forEach((h,i)=>{
+      const text=[h.jalaliDate,...(h.filters||[]),h.repair||'',h.isInstall?'نصب':''].join(' ').toLowerCase();
+      if(text.includes(q)){
+        results.push({cust:c, h, idx:i});
+      }
+    });
+  });
+  results.sort((a,b)=>new Date(b.h.isoDate)-new Date(a.h.isoDate));
+  if(!results.length){ el.innerHTML='<div class="empty">نتیجه‌ای پیدا نشد</div>'; return; }
+  el.innerHTML=results.map(r=>{
+    let tags='';
+    if(r.h.isInstall) tags+=`<span class="h-tag install">🔧 نصب</span>`;
+    (r.h.filters||[]).forEach(f=>{ tags+=`<span class="h-tag">💧 ${esc(f)}</span>`; });
+    if(r.h.repair) tags+=`<span class="h-tag repair">🛠️ ${esc(r.h.repair)}</span>`;
+    const total=num(r.h.svcPrice)+(r.h.parts||[]).reduce((s,p)=>s+num(p.price),0);
+    return `<div class="card" onclick="openDetail('${r.cust.id}')">
+      <div class="cust-name">${esc(r.cust.name)}</div>
+      <div class="h-date">📅 ${esc(r.h.jalaliDate)}</div>
+      <div class="h-tags">${tags}</div>
+      ${total>0?`<div style="font-size:12px;color:var(--accent);font-weight:700">💰 ${formatMoney(total)}</div>`:''}
+    </div>`;
+  }).join('');
+});
+
+// تصویر دستگاه
+document.getElementById('newDeviceImage').addEventListener('change', function(){
+  const file=this.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    document.getElementById('newImagePreview').innerHTML=`<img src="${e.target.result}" style="width:100%;border-radius:10px;max-height:180px;object-fit:cover">`;
+  };
+  reader.readAsDataURL(file);
+});
 
 window.openDetail=openDetail; window.sendWhatsapp=sendWhatsapp; window.sendSMS=sendSMS; window.openMap=openMap; window.openInvoice=openInvoice; window.togglePaid=togglePaid;
 
