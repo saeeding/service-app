@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفترچه سرویس تصفیه آب</title>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment-jalaali@0.9.2/build/moment-jalaali.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --bg:#f4ede4;--panel:#fff;--ink:#2e2a26;--muted:#8a8078;
+  --accent:#c0633a;--accent-dark:#9c4a28;--ok:#5c7a52;
+  --line:#e6dcd0;--due-bg:#fbeae2;--due-border:#e3a98a;
+  --blue:#1a73e8;--green:#2e7d32;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Tahoma',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.wrap{max-width:480px;margin:0 auto;padding:12px}
+header{text-align:center;margin-bottom:12px;padding-top:4px}
+header .tag{font-size:11px;letter-spacing:2px;color:var(--accent);font-weight:700}
+header h1{margin:4px 0 0;font-size:20px;font-weight:800}
+.tabs{display:flex;gap:4px;margin-bottom:10px;background:var(--panel);border-radius:14px;padding:4px;border:1px solid var(--line);overflow-x:auto}
+.tab{flex-shrink:0;text-align:center;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:none;font-family:inherit;white-space:nowrap}
+.tab.active{background:var(--accent);color:#fff}
+.view{display:none}.view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.card.due{background:var(--due-bg);border-color:var(--due-border)}
+.card.green-border{border-color:#a5d6a7;background:#f9fdf9}
+.cust-name{font-size:15px;font-weight:800;margin:0 0 3px}
+.cust-meta{font-size:12px;color:var(--muted);line-height:1.7}
+.cust-meta a{color:inherit;text-decoration:none}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:4px}
+.badge.due{background:var(--accent);color:#fff}
+.badge.ok{background:#eef1ea;color:var(--ok)}
+.badge.none{background:#f0eae2;color:var(--muted)}
+.row{display:flex;gap:6px}.row>*{flex:1}
+label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:8px 0 3px}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13px;font-family:inherit;background:#fdfaf6;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{resize:vertical;min-height:50px}
+button.primary{width:100%;margin-top:10px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+button.primary:active{background:var(--accent-dark)}
+button.primary.green{background:var(--green)}
+button.primary.blue{background:var(--blue)}
+.small-btn{border:none;background:var(--line);color:var(--ink);border-radius:8px;padding:6px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.small-btn.danger{background:#f4d9d0;color:var(--accent-dark)}
+.small-btn.gdrive{background:#e8f0fe;color:var(--blue)}
+.small-btn.green{background:#e8f5e9;color:var(--green)}
+.small-btn.blue{background:#e3f2fd;color:var(--blue)}
+.check-group{display:flex;flex-direction:column;gap:5px;margin-top:3px}
+.check-option{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;background:#fdfaf6;user-select:none}
+.check-option.selected{border-color:var(--accent);background:#fdf2ec}
+.check-option input{accent-color:var(--accent);width:15px;height:15px;flex-shrink:0}
+.check-label{font-size:13px;font-weight:600}
+.history-item{border-top:1px dashed var(--line);padding:8px 0;font-size:12px}
+.h-date{font-weight:700;color:var(--accent-dark);font-size:11px;margin-bottom:3px}
+.h-tags{display:flex;flex-wrap:wrap;gap:3px;margin:3px 0}
+.h-tag{display:inline-block;background:var(--due-bg);color:var(--accent-dark);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700}
+.h-tag.install{background:#e8f5e9;color:var(--green)}
+.h-tag.repair{background:#fff3e0;color:#e65100}
+.h-next{color:var(--muted);font-size:11px;margin-top:3px}
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 10px}
+.empty .big{font-size:30px;display:block;margin-bottom:6px}
+.back-link{display:inline-block;margin-bottom:8px;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer}
+.section-title{font-size:11px;font-weight:800;color:var(--muted);margin:14px 0 6px;letter-spacing:1px;text-transform:uppercase}
+.search-box{margin-bottom:8px}
+.install-section{border:1.5px solid #a5d6a7;border-radius:12px;padding:10px;margin-bottom:8px;background:#f9fdf9}
+.install-section .sec-title{font-size:12px;font-weight:800;color:var(--green);margin-bottom:6px}
+.install-badge{display:inline-block;background:#e8f5e9;color:var(--green);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;margin-top:4px}
+footer{text-align:center;color:var(--muted);font-size:10px;margin-top:16px;padding-bottom:10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:30px;font-size:12px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
+.backup-row{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap}
+.backup-row .small-btn{flex:1;padding:8px 4px;text-align:center;font-size:11px}
+.divider{border:none;border-top:1px dashed var(--line);margin:8px 0}
+/* فاکتور */
+.invoice-preview{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:12px}
+.invoice-header{text-align:center;border-bottom:2px solid var(--accent);padding-bottom:8px;margin-bottom:10px}
+.invoice-header h2{margin:0;font-size:16px;color:var(--accent)}
+.invoice-header p{margin:3px 0;color:var(--muted);font-size:11px}
+.invoice-table{width:100%;border-collapse:collapse;margin:8px 0}
+.invoice-table th{background:var(--bg);padding:6px;text-align:right;font-size:11px;border:1px solid var(--line)}
+.invoice-table td{padding:6px;text-align:right;border:1px solid var(--line);font-size:12px}
+.invoice-total{text-align:left;font-weight:800;font-size:14px;color:var(--accent);margin-top:8px}
+.invoice-note{color:var(--muted);font-size:11px;margin-top:6px;border-top:1px dashed var(--line);padding-top:6px}
+/* گزارش */
+.report-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;text-align:center}
+.report-card .amount{font-size:22px;font-weight:800;color:var(--accent)}
+.report-card .label{font-size:11px;color:var(--muted);margin-top:3px}
+.month-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.month-row:last-child{border-bottom:none}
+.month-name{font-weight:700}
+.month-amount{color:var(--accent);font-weight:800}
+/* تگ وضعیت پرداخت */
+.paid-badge{display:inline-block;background:#e8f5e9;color:var(--green);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
+.unpaid-badge{display:inline-block;background:#fff3e0;color:#e65100;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
+/* آیکون‌های اکشن */
+.action-icons{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="tag">💧 اپ اختصاصی تصفیه آب سفیر</div>
+    <h1>مدیریت مشتریان اسدی</h1>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="list">مشتریان</button>
+    <button class="tab" data-tab="reminders">یادآوری</button>
+    <button class="tab" data-tab="report">گزارش</button>
+    <button class="tab" data-tab="add">+ مشتری</button>
+  </div>
+
+  <div class="backup-row">
+    <button class="small-btn" id="exportBtn">⬇️ پشتیبان</button>
+    <button class="small-btn gdrive" id="gdriveBtn">☁️ درایو</button>
+    <button class="small-btn" id="importBtn">⬆️ بازگردانی</button>
+  </div>
+  <input type="file" id="importFile" accept="application/json" style="display:none">
+
+  <!-- لیست مشتریان -->
+  <div class="view active" id="view-list">
+    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 جستجو نام یا شماره..."></div>
+    <div id="customerList"></div>
+  </div>
+
+  <!-- یادآوری‌ها -->
+  <div class="view" id="view-reminders">
+    <div id="reminderList"></div>
+  </div>
+
+  <!-- گزارش مالی -->
+  <div class="view" id="view-report">
+    <div class="row" style="margin-bottom:10px">
+      <select id="reportYear"></select>
+    </div>
+    <div id="reportContent"></div>
+  </div>
+
+  <!-- افزودن مشتری -->
+  <div class="view" id="view-add">
+    <div class="card">
+      <label>نام مشتری *</label>
+      <input type="text" id="newName" placeholder="مثلاً: آقای رضایی">
+      <label>شماره تلفن</label>
+      <input type="tel" id="newPhone" placeholder="09xxxxxxxxx">
+      <label>آدرس</label>
+      <textarea id="newAddress" placeholder="آدرس کامل"></textarea>
+      <div class="section-title">اطلاعات دستگاه</div>
+      <label>مدل دستگاه</label>
+      <input type="text" id="newModel" placeholder="مثلاً: آکوا پیور A5">
+      <label>شماره سریال</label>
+      <input type="text" id="newSerial" placeholder="شماره سریال دستگاه">
+      <button class="primary" id="saveCustomerBtn">ذخیره مشتری</button>
+    </div>
+  </div>
+
+  <!-- جزئیات مشتری -->
+  <div class="view" id="view-detail">
+    <span class="back-link" id="backToList">← بازگشت</span>
+    <div class="card">
+      <div class="cust-name" id="detailName"></div>
+      <div class="cust-meta" id="detailMeta"></div>
+      <div id="deviceInfo" style="margin-top:6px;font-size:12px;color:var(--muted)"></div>
+      <div id="installBadgeArea"></div>
+      <div class="action-icons" id="detailActions"></div>
+    </div>
+
+    <div class="section-title">ثبت سرویس جدید</div>
+    <div class="card">
+      <label>تاریخ سرویس (شمسی) *</label>
+      <div class="row">
+        <input type="number" id="svcYear" placeholder="سال" min="1380" max="1450" style="flex:2">
+        <select id="svcMonth" style="flex:2">
+          <option value="1">فروردین</option><option value="2">اردیبهشت</option>
+          <option value="3">خرداد</option><option value="4">تیر</option>
+          <option value="5">مرداد</option><option value="6">شهریور</option>
+          <option value="7">مهر</option><option value="8">آبان</option>
+          <option value="9">آذر</option><option value="10">دی</option>
+          <option value="11">بهمن</option><option value="12">اسفند</option>
+        </select>
+        <input type="number" id="svcDay" placeholder="روز" min="1" max="31" style="flex:1">
+      </div>
+      <hr class="divider">
+      <div class="install-section">
+        <div class="sec-title">🔧 نصب دستگاه</div>
+        <label class="check-option" id="installOpt">
+          <input type="checkbox" id="chkInstall">
+          <span class="check-label">ثبت تاریخ نصب دستگاه</span>
+        </label>
+      </div>
+      <label>💧 فیلترهای تعویض‌شده</label>
+      <div class="check-group">
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر اول"><span class="check-label">فیلتر اول (پیش‌فیلتر)</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر دوم"><span class="check-label">فیلتر دوم (کربن اکتیو)</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر سوم"><span class="check-label">فیلتر سوم (کربن بلوک)</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر پست کربن"><span class="check-label">فیلتر پست کربن</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="فیلتر مینرال"><span class="check-label">فیلتر مینرال</span></label>
+        <label class="check-option"><input type="checkbox" name="filter" value="ممبران"><span class="check-label">ممبران</span></label>
+      </div>
+      <label style="margin-top:10px">🛠️ تعمیرات (اختیاری)</label>
+      <textarea id="repairDesc" placeholder="نوع تعمیر..."></textarea>
+      <hr class="divider">
+      <div class="section-title">💰 هزینه و قطعات</div>
+      <label>هزینه خدمات (تومان)</label>
+      <input type="number" id="svcPrice" placeholder="مثلاً: 150000">
+      <label>قطعات مصرفی</label>
+      <div id="partsContainer">
+        <div class="row part-row" style="margin-bottom:5px">
+          <input type="text" placeholder="نام قطعه" class="part-name" style="flex:2">
+          <input type="number" placeholder="قیمت" class="part-price" style="flex:1">
+        </div>
+      </div>
+      <button class="small-btn" id="addPartBtn" style="margin-top:5px">+ افزودن قطعه</button>
+      <hr class="divider">
+      <label>⏰ یادآوری سرویس بعدی</label>
+      <select id="reminderDays">
+        <option value="0">بدون یادآوری</option>
+        <option value="30">۱ ماه</option>
+        <option value="90">۳ ماه</option>
+        <option value="180">۶ ماه</option>
+        <option value="365" selected>۱ سال</option>
+        <option value="custom">دلخواه...</option>
+      </select>
+      <input type="number" id="customDays" placeholder="تعداد روز" style="display:none;margin-top:6px">
+      <button class="primary" id="saveServiceBtn">ثبت سرویس</button>
+    </div>
+    <div class="section-title">تاریخچه سرویس‌ها</div>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- فاکتور -->
+  <div class="view" id="view-invoice">
+    <span class="back-link" id="backFromInvoice">← بازگشت</span>
+    <div class="section-title">صدور فاکتور</div>
+    <div class="card">
+      <label>انتخاب سرویس</label>
+      <select id="invoiceServiceSelect"></select>
+      <label>یادداشت فاکتور (اختیاری)</label>
+      <textarea id="invoiceNote" placeholder="مثلاً: با تشکر از اعتماد شما"></textarea>
+      <button class="primary green" id="previewInvoiceBtn">پیش‌نمایش فاکتور</button>
+    </div>
+    <div id="invoicePreviewArea"></div>
+  </div>
+
+  <footer>اطلاعات روی گوشی شما ذخیره می‌شود</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+let customers=[], currentId=null, currentInvoiceId=null;
+const MONTHS=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+
+function uid(){ return 'c_'+Date.now()+'_'+Math.floor(Math.random()*9999); }
+function showToast(msg,dur=2200){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),dur); }
+function num(n){ return Number(n)||0; }
+function formatMoney(n){ return num(n).toLocaleString('fa-IR')+' تومان'; }
+
+// تاریخ شمسی
+function toJalali(iso){ if(!iso) return '-'; try{ return moment(iso,'YYYY-MM-DD').format('jYYYY/jMM/jDD'); }catch(e){ return iso; } }
+function jalaliToISO(y,m,d){ try{ return moment(`${y}/${m}/${d}`,'jYYYY/jM/jD').format('YYYY-MM-DD'); }catch(e){ return null; } }
+function todayJalali(){ const j=moment(); return {y:j.jYear(),m:j.jMonth()+1,d:j.jDate()}; }
+function setTodayInForm(){ const t=todayJalali(); document.getElementById('svcYear').value=t.y; document.getElementById('svcMonth').value=t.m; document.getElementById('svcDay').value=t.d; }
+
+// ذخیره‌سازی
+function loadAll(){ try{ const r=localStorage.getItem('svc_v3'); customers=r?JSON.parse(r):[]; }catch(e){ customers=[]; } renderList(); renderReminders(); renderReport(); }
+function saveAll(){ try{ localStorage.setItem('svc_v3',JSON.stringify(customers)); }catch(e){ showToast('خطا در ذخیره'); } }
+
+// یادآوری
+function getNextReminder(c){ let s=null; (c.history||[]).forEach(h=>{ if(h.nextDue&&(!s||new Date(h.nextDue)<new Date(s))) s=h.nextDue; }); return s; }
+function daysUntil(d){ const t=new Date(); t.setHours(0,0,0,0); const x=new Date(d); x.setHours(0,0,0,0); return Math.round((x-t)/86400000); }
+function esc(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+// رندر لیست
+function renderList(){
+  const el=document.getElementById('customerList');
+  const q=(document.getElementById('searchInput').value||'').trim().toLowerCase();
+  let list=customers.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','fa'));
+  if(q) list=list.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.phone||'').includes(q));
+  if(!list.length){ el.innerHTML='<div class="empty"><span class="big">📋</span>هنوز مشتری‌ای ثبت نشده.</div>'; return; }
+  el.innerHTML=list.map(c=>{
+    const next=getNextReminder(c);
+    let badge='<span class="badge none">بدون یادآوری</span>', cc='card';
+    if(next){ const d=daysUntil(next); if(d<=0){badge='<span class="badge due">⚠️ سرویس گذشته!</span>';cc+=' due';} else if(d<=7){badge=`<span class="badge due">⚠️ ${d} روز دیگر</span>`;cc+=' due';} else{badge=`<span class="badge ok">✅ سرویس: ${toJalali(next)}</span>`;} }
+    const device=c.model?`<div style="font-size:11px;color:var(--muted)">📟 ${esc(c.model)}${c.serial?' | '+esc(c.serial):''}</div>`:'';
+    const install=c.installDate?`<div style="font-size:11px;color:var(--ok)">🔧 نصب: ${c.installDate}</div>`:'';
+    return `<div class="${cc}" onclick="openDetail('${c.id}')"><div class="cust-name">${esc(c.name)}</div><div class="cust-meta">${c.phone?'📞 '+esc(c.phone):''}</div>${device}${install}<div>${badge}</div></div>`;
+  }).join('');
+}
+
+// رندر یادآوری
+function renderReminders(){
+  const el=document.getElementById('reminderList');
+  let items=[];
+  customers.forEach(c=>{ const n=getNextReminder(c); if(n) items.push({cust:c,date:n,days:daysUntil(n)}); });
+  items.sort((a,b)=>a.days-b.days);
+  if(!items.length){ el.innerHTML='<div class="empty"><span class="big">🔔</span>هیچ یادآوری فعالی نداری.</div>'; return; }
+  el.innerHTML=items.map(it=>{
+    let cc='card', badge;
+    if(it.days<=0){badge=`<span class="badge due">⚠️ گذشته (${toJalali(it.date)})</span>`;cc+=' due';}
+    else if(it.days<=14){badge=`<span class="badge due">⚠️ ${it.days} روز دیگر</span>`;cc+=' due';}
+    else{badge=`<span class="badge ok">✅ ${it.days} روز دیگر — ${toJalali(it.date)}</span>`;}
+    return `<div class="${cc}" onclick="openDetail('${it.cust.id}')">
+      <div class="cust-name">${esc(it.cust.name)}</div>
+      <div class="cust-meta">${it.cust.phone?'📞 '+esc(it.cust.phone):''}</div>
+      <div>${badge}</div>
+      <div class="action-icons" style="margin-top:6px">
+        ${it.cust.phone?`<button class="small-btn green" onclick="sendWhatsapp('${it.cust.phone}','${esc(it.cust.name)}',event)">💬 واتساپ</button>`:''}
+        ${it.cust.phone?`<button class="small-btn blue" onclick="sendSMS('${it.cust.phone}','${esc(it.cust.name)}',event)">📱 SMS</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// گزارش مالی
+function renderReport(){
+  const sel=document.getElementById('reportYear');
+  const j=todayJalali();
+  if(!sel.options.length){
+    for(let y=j.y;y>=j.y-3;y--){ const o=document.createElement('option'); o.value=y; o.textContent=y+' شمسی'; sel.appendChild(o); }
+  }
+  const year=parseInt(sel.value)||j.y;
+  const el=document.getElementById('reportContent');
+  let totalYear=0, monthData=Array(12).fill(0), totalServices=0, unpaidTotal=0;
+  customers.forEach(c=>{
+    (c.history||[]).forEach(h=>{
+      if(!h.isoDate) return;
+      const jy=moment(h.isoDate,'YYYY-MM-DD').jYear();
+      const jm=moment(h.isoDate,'YYYY-MM-DD').jMonth();
+      if(jy!==year) return;
+      totalServices++;
+      const total=num(h.svcPrice)+(h.parts||[]).reduce((s,p)=>s+num(p.price),0);
+      totalYear+=total;
+      monthData[jm]+=total;
+      if(!h.paid) unpaidTotal+=total;
+    });
+  });
+  el.innerHTML=`
+    <div class="row" style="margin-bottom:8px">
+      <div class="report-card"><div class="amount">${totalYear.toLocaleString('fa-IR')}</div><div class="label">درآمد سال ${year} (تومان)</div></div>
+      <div class="report-card"><div class="amount" style="color:var(--ok)">${totalServices}</div><div class="label">تعداد سرویس</div></div>
+    </div>
+    ${unpaidTotal>0?`<div class="card" style="background:#fff3e0;border-color:#ffcc80"><div style="font-size:12px;font-weight:700;color:#e65100">💰 پرداخت نشده: ${formatMoney(unpaidTotal)}</div></div>`:''}
+    <div class="card">
+      <div class="section-title">درآمد ماهانه</div>
+      ${MONTHS.map((m,i)=>monthData[i]>0?`<div class="month-row"><span class="month-name">${m}</span><span class="month-amount">${monthData[i].toLocaleString('fa-IR')} تومان</span></div>`:'').join('')||'<div style="color:var(--muted);font-size:13px;padding:8px 0">داده‌ای برای این سال ثبت نشده</div>'}
+    </div>`;
+}
+
+// جزئیات مشتری
+function openDetail(id){
+  currentId=id;
+  const c=customers.find(x=>x.id===id); if(!c) return;
+  document.getElementById('detailName').textContent=c.name;
+  let meta='';
+  if(c.phone) meta+=`📞 <a href="tel:${c.phone}">${esc(c.phone)}</a><br>`;
+  if(c.address) meta+=`📍 ${esc(c.address)}`;
+  document.getElementById('detailMeta').innerHTML=meta||'بدون اطلاعات تماس';
+  let dev='';
+  if(c.model) dev+=`📟 مدل: ${esc(c.model)} `;
+  if(c.serial) dev+=`| سریال: ${esc(c.serial)}`;
+  document.getElementById('deviceInfo').innerHTML=dev;
+  document.getElementById('installBadgeArea').innerHTML=c.installDate?`<div class="install-badge">🔧 نصب: ${c.installDate}</div>`:'';
+  // دکمه‌های اکشن
+  let acts='';
+  if(c.phone) acts+=`<button class="small-btn green" onclick="sendWhatsapp('${c.phone}','${esc(c.name)}',event)">💬 واتساپ</button>`;
+  if(c.phone) acts+=`<button class="small-btn blue" onclick="sendSMS('${c.phone}','${esc(c.name)}',event)">📱 SMS</button>`;
+  if(c.address) acts+=`<button class="small-btn" onclick="openMap('${esc(c.address)}',event)">🗺️ مسیریابی</button>`;
+  acts+=`<button class="small-btn green" onclick="openInvoice('${c.id}',event)">🧾 فاکتور</button>`;
+  acts+=`<button class="small-btn danger" id="deleteCustBtn">🗑️ حذف</button>`;
+  document.getElementById('detailActions').innerHTML=acts;
+  document.getElementById('deleteCustBtn').addEventListener('click',()=>{
+    if(!confirm('این مشتری حذف شود؟')) return;
+    customers=customers.filter(x=>x.id!==currentId); saveAll(); showToast('حذف شد'); switchView('list'); renderList();
+  });
+  // ریست فرم
+  document.getElementById('chkInstall').checked=false;
+  document.getElementById('installOpt').classList.remove('selected');
+  document.querySelectorAll('input[name=filter]').forEach(x=>{x.checked=false;x.closest('.check-option').classList.remove('selected');});
+  document.getElementById('repairDesc').value='';
+  document.getElementById('svcPrice').value='';
+  document.getElementById('reminderDays').value='365';
+  document.getElementById('customDays').style.display='none';
+  // ریست قطعات
+  const pc=document.getElementById('partsContainer');
+  pc.innerHTML=`<div class="row part-row" style="margin-bottom:5px"><input type="text" placeholder="نام قطعه" class="part-name" style="flex:2"><input type="number" placeholder="قیمت" class="part-price" style="flex:1"></div>`;
+  setTodayInForm();
+  renderHistory(c);
+  switchView('detail');
+}
+
+function renderHistory(c){
+  const el=document.getElementById('historyList');
+  const hist=(c.history||[]).slice().sort((a,b)=>new Date(b.isoDate)-new Date(a.isoDate));
+  if(!hist.length){ el.innerHTML='<div class="empty">هنوز سرویسی ثبت نشده.</div>'; return; }
+  el.innerHTML=hist.map((h,i)=>{
+    let tags='';
+    if(h.isInstall) tags+=`<span class="h-tag install">🔧 نصب</span>`;
+    (h.filters||[]).forEach(f=>{ tags+=`<span class="h-tag">💧 ${esc(f)}</span>`; });
+    if(h.repair) tags+=`<span class="h-tag repair">🛠️ ${esc(h.repair)}</span>`;
+    const total=num(h.svcPrice)+(h.parts||[]).reduce((s,p)=>s+num(p.price),0);
+    const paidBadge=total>0?(h.paid?'<span class="paid-badge">✅ پرداخت شد</span>':'<span class="unpaid-badge">⏳ پرداخت نشده</span>'):'';
+    const togglePaid=total>0?`<button class="small-btn" onclick="togglePaid('${c.id}',${i},event)" style="font-size:10px;padding:3px 7px">${h.paid?'بازگشت':'✓ ثبت پرداخت'}</button>`:'';
+    return `<div class="card history-item">
+      <div class="h-date">📅 ${esc(h.jalaliDate)} ${paidBadge}</div>
+      <div class="h-tags">${tags||'<span class="h-tag">سرویس</span>'}</div>
+      ${total>0?`<div style="font-size:12px;margin-top:4px;font-weight:700;color:var(--accent)">💰 مجموع: ${formatMoney(total)}</div>`:''}
+      ${h.parts&&h.parts.length?`<div style="font-size:11px;color:var(--muted)">${h.parts.filter(p=>p.name).map(p=>`${esc(p.name)}: ${formatMoney(p.price)}`).join(' | ')}</div>`:''}
+      ${h.nextDue?`<div class="h-next">⏰ یادآوری: ${toJalali(h.nextDue)}</div>`:''}
+      <div style="margin-top:5px">${togglePaid}</div>
+    </div>`;
+  }).join('');
+}
+
+function togglePaid(custId, idx, e){
+  e.stopPropagation();
+  const c=customers.find(x=>x.id===custId); if(!c) return;
+  c.history[c.history.length-1-idx]; // نزدیک‌ترین
+  const sorted=[...c.history].sort((a,b)=>new Date(b.isoDate)-new Date(a.isoDate));
+  const h=sorted[idx];
+  const realIdx=c.history.indexOf(h);
+  c.history[realIdx].paid=!c.history[realIdx].paid;
+  saveAll(); renderHistory(c); renderReport(); showToast(c.history[realIdx].paid?'پرداخت ثبت شد ✅':'بازگشت به نپرداخته');
+}
+
+// پیامک یادآوری
+function sendWhatsapp(phone, name, e){
+  e.stopPropagation();
+  const msg=`سلام ${name} عزیز 🙏\nوقت سرویس دوره‌ای دستگاه تصفیه آب شما رسیده. لطفاً برای هماهنگی تماس بگیرید.\nبا تشکر 💧`;
+  const clean=phone.replace(/^0/,'98');
+  window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+function sendSMS(phone, name, e){
+  e.stopPropagation();
+  const msg=`سلام ${name} عزیز، وقت سرویس دستگاه تصفیه آب شما رسیده. لطفاً تماس بگیرید.`;
+  window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// مسیریابی
+function openMap(address, e){
+  e.stopPropagation();
+  window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`,'_blank');
+}
+
+// فاکتور
+function openInvoice(id, e){
+  if(e) e.stopPropagation();
+  currentInvoiceId=id;
+  const c=customers.find(x=>x.id===id); if(!c) return;
+  const sel=document.getElementById('invoiceServiceSelect');
+  sel.innerHTML='';
+  const hist=[...c.history].sort((a,b)=>new Date(b.isoDate)-new Date(a.isoDate));
+  hist.forEach((h,i)=>{
+    const total=num(h.svcPrice)+(h.parts||[]).reduce((s,p)=>s+num(p.price),0);
+    const o=document.createElement('option');
+    o.value=i;
+    o.textContent=`${h.jalaliDate} — ${formatMoney(total)}`;
+    sel.appendChild(o);
+  });
+  document.getElementById('invoiceNote').value='با تشکر از اعتماد شما';
+  document.getElementById('invoicePreviewArea').innerHTML='';
+  switchView('invoice');
+}
+
+document.getElementById('previewInvoiceBtn').addEventListener('click',()=>{
+  const c=customers.find(x=>x.id===currentInvoiceId); if(!c) return;
+  const hist=[...c.history].sort((a,b)=>new Date(b.isoDate)-new Date(a.isoDate));
+  const idx=parseInt(document.getElementById('invoiceServiceSelect').value)||0;
+  const h=hist[idx]; if(!h) return;
+  const note=document.getElementById('invoiceNote').value;
+  let rows='';
+  if(h.svcPrice>0) rows+=`<tr><td>هزینه خدمات</td><td>1</td><td>${formatMoney(h.svcPrice)}</td><td>${formatMoney(h.svcPrice)}</td></tr>`;
+  (h.parts||[]).filter(p=>p.name).forEach(p=>{ rows+=`<tr><td>${esc(p.name)}</td><td>1</td><td>${formatMoney(p.price)}</td><td>${formatMoney(p.price)}</td></tr>`; });
+  const total=num(h.svcPrice)+(h.parts||[]).reduce((s,p)=>s+num(p.price),0);
+  const tags=[...(h.filters||[])];
+  if(h.isInstall) tags.unshift('نصب دستگاه');
+  if(h.repair) tags.push(h.repair);
+  document.getElementById('invoicePreviewArea').innerHTML=`
+    <div class="invoice-preview" id="invoiceToPrint">
+      <div class="invoice-header">
+        <h2>💧 فاکتور خدمات تصفیه آب</h2>
+        <p>تاریخ: ${h.jalaliDate}</p>
+        <p>مشتری: ${esc(c.name)} ${c.phone?'| '+esc(c.phone):''}</p>
+        ${c.model?`<p>دستگاه: ${esc(c.model)} ${c.serial?'| سریال: '+esc(c.serial):''}</p>`:''}
+      </div>
+      <div style="font-size:12px;margin-bottom:8px;color:var(--muted)">خدمات انجام شده: ${tags.join('، ')}</div>
+      <table class="invoice-table">
+        <tr><th>شرح</th><th>تعداد</th><th>قیمت واحد</th><th>مبلغ</th></tr>
+        ${rows||'<tr><td colspan="4" style="text-align:center;color:var(--muted)">بدون آیتم</td></tr>'}
+      </table>
+      <div class="invoice-total">جمع کل: ${formatMoney(total)}</div>
+      ${note?`<div class="invoice-note">${esc(note)}</div>`:''}
+    </div>
+    <button class="primary" onclick="printInvoice()" style="margin-top:8px">🖨️ چاپ / ذخیره PDF</button>`;
+});
+
+window.printInvoice=function(){
+  const content=document.getElementById('invoiceToPrint').innerHTML;
+  const w=window.open('','_blank');
+  w.document.write(`<html dir="rtl"><head><meta charset="UTF-8"><title>فاکتور</title><style>body{font-family:Tahoma;padding:20px;direction:rtl}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:right}th{background:#f5f5f5}.invoice-total{font-weight:bold;font-size:16px;margin-top:12px;text-align:left}</style></head><body>${content}</body></html>`);
+  w.document.close(); w.print();
+};
+
+// سوئیچ ویو
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const map={list:'list',reminders:'reminders',report:'report',add:'add'};
+  if(map[name]){ const tb=document.querySelector(`[data-tab="${map[name]}"]`); if(tb) tb.classList.add('active'); }
+}
+
+// رویدادها
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{ switchView(tab.dataset.tab); if(tab.dataset.tab==='reminders') renderReminders(); if(tab.dataset.tab==='list') renderList(); if(tab.dataset.tab==='report') renderReport(); });
+});
+document.getElementById('backToList').addEventListener('click',()=>{ switchView('list'); renderList(); });
+document.getElementById('backFromInvoice').addEventListener('click',()=>{ switchView('detail'); });
+document.getElementById('searchInput').addEventListener('input',renderList);
+document.getElementById('reportYear').addEventListener('change',renderReport);
+document.getElementById('reminderDays').addEventListener('change',e=>{ document.getElementById('customDays').style.display=e.target.value==='custom'?'block':'none'; });
+document.getElementById('chkInstall').addEventListener('change',function(){ document.getElementById('installOpt').classList.toggle('selected',this.checked); });
+document.querySelectorAll('input[name=filter]').forEach(cb=>{ cb.addEventListener('change',function(){ this.closest('.check-option').classList.toggle('selected',this.checked); }); });
+document.getElementById('addPartBtn').addEventListener('click',()=>{
+  const div=document.createElement('div'); div.className='row part-row'; div.style.marginBottom='5px';
+  div.innerHTML=`<input type="text" placeholder="نام قطعه" class="part-name" style="flex:2"><input type="number" placeholder="قیمت" class="part-price" style="flex:1">`;
+  document.getElementById('partsContainer').appendChild(div);
+});
+
+document.getElementById('saveCustomerBtn').addEventListener('click',()=>{
+  const name=document.getElementById('newName').value.trim();
+  if(!name){ showToast('نام مشتری را وارد کن'); return; }
+  customers.push({id:uid(),name,phone:document.getElementById('newPhone').value.trim(),address:document.getElementById('newAddress').value.trim(),model:document.getElementById('newModel').value.trim(),serial:document.getElementById('newSerial').value.trim(),history:[]});
+  saveAll();
+  ['newName','newPhone','newAddress','newModel','newSerial'].forEach(id=>document.getElementById(id).value='');
+  showToast('مشتری ذخیره شد ✅'); switchView('list'); renderList();
+});
+
+document.getElementById('saveServiceBtn').addEventListener('click',()=>{
+  const c=customers.find(x=>x.id===currentId); if(!c) return;
+  const y=document.getElementById('svcYear').value, m=document.getElementById('svcMonth').value, d=document.getElementById('svcDay').value;
+  if(!y||!d){ showToast('تاریخ را کامل وارد کن'); return; }
+  const isoDate=jalaliToISO(y,m,d); if(!isoDate){ showToast('تاریخ نامعتبر'); return; }
+  const jalaliDate=`${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+  const isInstall=document.getElementById('chkInstall').checked;
+  const filters=Array.from(document.querySelectorAll('input[name=filter]:checked')).map(x=>x.value);
+  const repair=document.getElementById('repairDesc').value.trim();
+  const svcPrice=num(document.getElementById('svcPrice').value);
+  const parts=Array.from(document.querySelectorAll('.part-row')).map(r=>({name:r.querySelector('.part-name').value.trim(),price:num(r.querySelector('.part-price').value)})).filter(p=>p.name);
+  if(!isInstall&&!filters.length&&!repair){ showToast('حداقل یک مورد انتخاب کن'); return; }
+  if(isInstall) c.installDate=jalaliDate;
+  let days=document.getElementById('reminderDays').value;
+  if(days==='custom') days=parseInt(document.getElementById('customDays').value)||0; else days=parseInt(days);
+  let nextDue=null;
+  if(days>0){ const nd=new Date(isoDate); nd.setDate(nd.getDate()+days); nextDue=nd.toISOString().slice(0,10); }
+  c.history=c.history||[];
+  c.history.push({isoDate,jalaliDate,isInstall,filters,repair,svcPrice,parts,nextDue,paid:false});
+  saveAll();
+  document.getElementById('repairDesc').value=''; document.getElementById('svcPrice').value='';
+  document.querySelectorAll('input[name=filter]').forEach(x=>{x.checked=false;x.closest('.check-option').classList.remove('selected');});
+  document.getElementById('chkInstall').checked=false; document.getElementById('installOpt').classList.remove('selected');
+  const pc=document.getElementById('partsContainer');
+  pc.innerHTML=`<div class="row part-row" style="margin-bottom:5px"><input type="text" placeholder="نام قطعه" class="part-name" style="flex:2"><input type="number" placeholder="قیمت" class="part-price" style="flex:1"></div>`;
+  showToast('سرویس ثبت شد ✅'); renderHistory(c); renderReminders(); renderReport();
+  document.getElementById('installBadgeArea').innerHTML=c.installDate?`<div class="install-badge">🔧 نصب: ${c.installDate}</div>`:'';
+});
+
+// پشتیبان
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(customers,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  const j=todayJalali(); a.href=url; a.download=`backup-${j.y}-${j.m}-${j.d}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('پشتیبان دانلود شد ✅');
+});
+document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{ try{ const data=JSON.parse(ev.target.result); if(!Array.isArray(data)) throw new Error(); if(customers.length>0&&!confirm('اطلاعات فعلی جایگزین شود؟')) return; customers=data; saveAll(); renderList(); renderReminders(); renderReport(); showToast('بازگردانی انجام شد ✅'); }catch(err){ showToast('فایل نامعتبر'); } e.target.value=''; };
+  r.readAsText(file);
+});
+
+// گوگل درایو
+const GDRIVE_CLIENT_ID='540284402443-2fn10ack4ska1irf2q40e3e3uqtq7c3r.apps.googleusercontent.com';
+let gdriveToken=null;
+document.getElementById('gdriveBtn').addEventListener('click',async()=>{
+  try{ if(!gdriveToken) await gdriveSignIn(); await uploadToDrive(); }
+  catch(e){ showToast('خطا در اتصال به گوگل درایو'); }
+});
+function gdriveSignIn(){
+  return new Promise((resolve,reject)=>{
+    const client=window.google.accounts.oauth2.initTokenClient({client_id:GDRIVE_CLIENT_ID,scope:'https://www.googleapis.com/auth/drive.file',callback:resp=>{ if(resp.error){reject(resp);return;} gdriveToken=resp.access_token; resolve(); }});
+    client.requestAccessToken();
+  });
+}
+async function uploadToDrive(){
+  const j=todayJalali(); const fileName=`backup-${j.y}-${j.m}-${j.d}.json`;
+  const form=new FormData();
+  form.append('metadata',new Blob([JSON.stringify({name:fileName,mimeType:'application/json'})],{type:'application/json'}));
+  form.append('file',new Blob([JSON.stringify(customers,null,2)],{type:'application/json'}));
+  const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{Authorization:`Bearer ${gdriveToken}`},body:form});
+  if(res.ok) showToast('در گوگل درایو ذخیره شد ✅');
+  else{ gdriveToken=null; showToast('خطا در آپلود'); }
+}
+
+window.openDetail=openDetail; window.sendWhatsapp=sendWhatsapp; window.sendSMS=sendSMS; window.openMap=openMap; window.openInvoice=openInvoice; window.togglePaid=togglePaid;
+loadAll();
+</script>
+</body>
+</html>
