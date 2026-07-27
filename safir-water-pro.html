@@ -747,7 +747,8 @@ window.addDeviceImage=function(custId, input){
 
 // جستجو در تاریخچه و آدرس
 document.getElementById('historySearchInput').addEventListener('input', function(){
-  const q=this.value.trim().toLowerCase();
+  const q=this.value.trim();
+  const qLower=q.toLowerCase();
   const el=document.getElementById('historySearchResults');
   if(!q){ el.innerHTML='<div class="empty">چیزی بنویس تا جستجو کنه...</div>'; return; }
 
@@ -755,8 +756,8 @@ document.getElementById('historySearchInput').addEventListener('input', function
 
   // جستجو در مشتریان (نام، آدرس، تلفن، سریال، مدل)
   customers.forEach(c=>{
-    const custText=[c.name||'',c.address||'',c.phone||'',c.serial||'',c.model||''].join(' ').toLowerCase();
-    if(custText.includes(q)){
+    const custText=[c.name||'',c.address||'',c.phone||'',c.serial||'',c.model||''].join(' ');
+    if(custText.includes(q) || custText.toLowerCase().includes(qLower)){
       results.push({type:'customer', cust:c});
     }
   });
@@ -764,8 +765,8 @@ document.getElementById('historySearchInput').addEventListener('input', function
   // جستجو در تاریخچه سرویس‌ها
   customers.forEach(c=>{
     (c.history||[]).forEach((h,i)=>{
-      const text=[h.jalaliDate,...(h.filters||[]),h.repair||'',h.isInstall?'نصب':''].join(' ').toLowerCase();
-      if(text.includes(q)){
+      const text=[h.jalaliDate,...(h.filters||[]),h.repair||'',h.isInstall?'نصب':''].join(' ');
+      if((text.includes(q)||text.toLowerCase().includes(qLower))){
         // اگه قبلاً این مشتری به عنوان customer اضافه نشده
         if(!results.find(r=>r.type==='service'&&r.cust.id===c.id&&r.idx===i))
           results.push({type:'service', cust:c, h, idx:i});
